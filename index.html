@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Handy</title>
+		<link rel="stylesheet" href="./vendor/perfect-scrollbar/css/perfect-scrollbar.min.css">
+		<link rel="stylesheet" href="index.css">
+	</head>
+	<body>
+		<div id="title"></div>
+		<app></app>
+
+		<script type="text/javascript" src="./vendor/perfect-scrollbar/js/perfect-scrollbar.min.js"></script>
+		<script type="text/javascript">
+			const jQuery = require( 'jquery' );
+			const titlebar = require( 'titlebar' );
+
+			window.$ = jQuery;
+
+			const t = titlebar();
+			t.appendTo(document.getElementById( 'title' ));
+
+			t.on('close', function(e) {
+				console.log('close');
+			});
+
+			const riot = require('riot');
+			require('./app');
+		</script>
+	</body>
+</html>

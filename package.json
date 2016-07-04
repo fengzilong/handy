@@ -1,0 +1,48 @@
+{
+  "name": "handy",
+  "productName": "Handy",
+  "version": "0.0.0",
+  "description": "My breathtaking app",
+  "license": "MIT",
+  "repository": "fengzilong/handy",
+  "author": {
+    "name": "mo",
+    "email": "feng_zilong@163.com",
+    "url": "https://github.com/fengzilong/handy"
+  },
+  "scripts": {
+    "test": "xo",
+    "dev": "concurrently --kill-others \"npm run electron\" \"npm run riot\"",
+    "electron": "electron .",
+    "riot": "riot ./components tags.js -w",
+    "build": "electron-packager . --out=dist --app-version=$npm_package_version --prune --asar --overwrite --all"
+  },
+  "files": [
+    "index.js",
+    "index.html",
+    "index.css"
+  ],
+  "keywords": [
+    "electron-app",
+    "electron"
+  ],
+  "dependencies": {
+    "electron-debug": "^1.0.0",
+    "jquery": "^3.0.0",
+    "riot": "^2.4.1",
+    "titlebar": "^1.4.0"
+  },
+  "devDependencies": {
+    "devtron": "^1.1.0",
+    "electron-packager": "^7.0.0",
+    "electron-prebuilt": "^1.0.1",
+    "xo": "^0.15.0"
+  },
+  "xo": {
+    "esnext": true,
+    "envs": [
+      "node",
+      "browser"
+    ]
+  }
+}
