@@ -1,3 +1,5 @@
+const observable = require( 'riot-observable' );
+
 let plugins = {};
 
 const injectStyle = css => {
@@ -18,22 +20,36 @@ const isPluginRegistered = name => {
 	return name in plugins;
 }
 
-const getPlguinByName = name => {
+const getPluginByName = name => {
 	return plugins[ name ];
 };
 
 const applyPlugin = ( name, ...args ) => {
-	if( !Handy.isPluginRegistered( name ) ) {
+	if( !isPluginRegistered( name ) ) {
 		return Promise.reject();
 	}
 
-	let applied = plugins[ name ].apply( ...args );
+	let applied = getPluginByName( name ).apply( ...args );
 	if( !( applied instanceof Promise ) ) {
 		applied = Promise.resolve( applied );
 	}
 
 	return applied;
 };
+
+const applyPluginEnter = ( name, ...args ) => {
+	if( !isPluginRegistered( name ) ) {
+		return;
+	}
+
+	let enterApplied = getPluginByName( name ).enter( ...args );
+
+	if( !( enterApplied instanceof Promise ) ) {
+		enterApplied = Promise.resolve( enterApplied );
+	}
+
+	return enterApplied;
+}
 
 const loading = () => {
 	window.loading = true;
@@ -46,13 +62,16 @@ const loadingEnd = () => {
 }
 
 const Handy = {
-	getPlguinByName,
+	getPluginByName,
 	isPluginRegistered,
 	registerPlugin,
 	applyPlugin,
+	applyPluginEnter,
 	loading,
 	loadingEnd,
 	settings: {}
 };
+
+observable( Handy );
 
 module.exports = Handy;

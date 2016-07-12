@@ -26,12 +26,28 @@
 		}
 	</style>
 
-	<input autofocus type="text" value="" oninput="{ onInput }">
+	<input autofocus type="text" value="" oninput="{ onInput }" onkeydown="{ onKeydown }">
 	<ui-spinner if="{ loading }"></ui-spinner>
 
 	<script>
 		this.onInput = e => {
 			this.opts.onChange && this.opts.onChange( e.target.value );
+		};
+		this.onKeydown = e => {
+			// separate command and keyword
+			const kw = e.target.value.trim();
+			const parts = kw.split( ' ' );
+			const name = parts.splice( 0, 1 )[ 0 ];
+			const args = parts;
+
+			if( e.keyCode === 13 ) {
+				Handy.applyPluginEnter( name, ...args )
+					.then(v => {
+						Handy.trigger( 'plugin-render', name, v );
+					});
+			}
+
+			return true;
 		};
 	</script>
 </ui-input>

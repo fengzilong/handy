@@ -28,6 +28,14 @@ function createMainWindow() {
 	return win;
 }
 
+function createTray() {
+	
+}
+
+function createTrayMenu() {
+
+}
+
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit();

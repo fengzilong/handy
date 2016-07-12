@@ -10,15 +10,51 @@ riot.tag2('app', '<ui-input on-change="{onChange}"></ui-input> <ui-autocomplete 
 riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}"></div> <div if="{!usePluginRender}" each="{item in items}">{item}</div>', 'ui-autocomplete,[riot-tag="ui-autocomplete"],[data-is="ui-autocomplete"]{ display: block; position: absolute; width: 100%; height: 320px; overflow-y: scroll; }', '', function(opts) {
 		this.usePluginRender = false;
 
+		Handy.on( 'plugin-render', ( name, v ) => {
+
+			if( !v ) return;
+
+			if( !Handy.isPluginRegistered( name ) ) return;
+
+			const plugin = Handy.getPluginByName( name );
+
+			if( typeof plugin.render === 'function' ) {
+				let content = '';
+				for( let i = 0, len = v.length; i < len; i++ ) {
+					content += plugin.render( v[ i ] );
+				}
+				this.usePluginRender = true;
+				this.pluginRenderArea.innerHTML = content;
+				this.update();
+
+				if( typeof plugin.bind === 'function' ) {
+					plugin.bind( this.pluginRenderArea );
+				}
+				return;
+			}
+
+			this.usePluginRender = false;
+			this.items = v;
+			this.update();
+		} );
+
+		Handy.on( 'render', v => {
+
+			if( !v ) return;
+
+			this.usePluginRender = false;
+			this.items = v;
+			this.update();
+		} );
+
 		let isProcessing = false;
 		let latest = '';
 
 		const query = () => {
-			console.log( 'query called' );
 
 			const kw = this.opts.keyword.trim();
 			const parts = kw.split( ' ' );
-			const name = parts.splice( 0, 1 );
+			const name = parts.splice( 0, 1 )[ 0 ];
 			const args = parts;
 
 			if( latest === kw ) {
@@ -30,7 +66,7 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 			if( !Handy.isPluginRegistered( name ) ) {
 				this.items = [];
 				this.pluginRenderArea.innerHTML = '';
-				console.log( 'not registered' );
+				this.update();
 			}
 
 			Handy.applyPlugin( name, ...args )
@@ -39,28 +75,7 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 						return;
 					}
 
-					console.log( 'v', v );
-
-					const plugin = Handy.getPlguinByName( name );
-
-					if( typeof plugin.render === 'function' ) {
-						let content = '';
-						for( let i = 0, len = v.length; i < len; i++ ) {
-							content += plugin.render( v[ i ] );
-						}
-						this.usePluginRender = true;
-						this.pluginRenderArea.innerHTML = content;
-						this.update();
-
-						if( typeof plugin.bind === 'function' ) {
-							plugin.bind( this.pluginRenderArea );
-						}
-						return;
-					}
-
-					this.usePluginRender = false;
-					this.items = v;
-					this.update();
+					Handy.trigger( 'plugin-render', name, v );
 				})
 				.catch(err => {
 					console.log( err );
@@ -82,9 +97,25 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 		});
 });
 
-riot.tag2('ui-input', '<input autofocus type="text" value="" oninput="{onInput}"> <ui-spinner if="{loading}"></ui-spinner>', 'ui-input,[riot-tag="ui-input"],[data-is="ui-input"]{ display: block; position: relative; } ui-input input,[riot-tag="ui-input"] input,[data-is="ui-input"] input{ width: 100%; height: 60px; outline: none; padding: 5px 15px 5px; font-size: 22px; border: none; background-color: #F1F1F1; color: #405655; letter-spacing: 2px; text-transform: uppercase; } ui-input ui-spinner,[riot-tag="ui-input"] ui-spinner,[data-is="ui-input"] ui-spinner{ position: absolute; right: 10px; top: 50%; transform: translate3d(0,-50%,0); }', '', function(opts) {
+riot.tag2('ui-input', '<input autofocus type="text" value="" oninput="{onInput}" onkeydown="{onKeydown}"> <ui-spinner if="{loading}"></ui-spinner>', 'ui-input,[riot-tag="ui-input"],[data-is="ui-input"]{ display: block; position: relative; } ui-input input,[riot-tag="ui-input"] input,[data-is="ui-input"] input{ width: 100%; height: 60px; outline: none; padding: 5px 15px 5px; font-size: 22px; border: none; background-color: #F1F1F1; color: #405655; letter-spacing: 2px; text-transform: uppercase; } ui-input ui-spinner,[riot-tag="ui-input"] ui-spinner,[data-is="ui-input"] ui-spinner{ position: absolute; right: 10px; top: 50%; transform: translate3d(0,-50%,0); }', '', function(opts) {
 		this.onInput = e => {
 			this.opts.onChange && this.opts.onChange( e.target.value );
+		};
+		this.onKeydown = e => {
+
+			const kw = e.target.value.trim();
+			const parts = kw.split( ' ' );
+			const name = parts.splice( 0, 1 )[ 0 ];
+			const args = parts;
+
+			if( e.keyCode === 13 ) {
+				Handy.applyPluginEnter( name, ...args )
+					.then(v => {
+						Handy.trigger( 'plugin-render', name, v );
+					});
+			}
+
+			return true;
 		};
 });
 

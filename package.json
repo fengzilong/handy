@@ -30,6 +30,7 @@
     "electron-debug": "^1.0.0",
     "jquery": "^3.0.0",
     "riot": "^2.4.1",
+    "riot-observable": "^2.4.2",
     "titlebar": "^1.4.0"
   },
   "devDependencies": {
