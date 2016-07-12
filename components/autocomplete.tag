@@ -10,9 +10,11 @@
 	</style>
 
 	<div name="pluginRenderArea" if="{ usePluginRender }"></div>
-	<div if="{ !usePluginRender }" each="{ item in items }">{ item }</div>
+	<div name="renderArea" if="{ !usePluginRender }" each="{ item in items }">{ item }</div>
 
 	<script>
+		const { ipcRenderer } = require('electron');
+
 		this.usePluginRender = false;
 
 		Handy.on( 'plugin-render', ( name, v ) => {
@@ -35,12 +37,25 @@
 				if( typeof plugin.bind === 'function' ) {
 					plugin.bind( this.pluginRenderArea );
 				}
-				return;
+			} else {
+				this.usePluginRender = false;
+				this.items = v;
+				this.update();
 			}
 
-			this.usePluginRender = false;
-			this.items = v;
-			this.update();
+			setTimeout(() => {
+				let area;
+				if( this.usePluginRender ) {
+					area = this.pluginRenderArea;
+				} else {
+					area = this.renderArea;
+				}
+
+				const v = $(area).height();
+				console.log( v );
+
+				ipcRenderer.send( 'resize-height', 84 + v );
+			}, 50);
 		} );
 
 		Handy.on( 'render', v => {
@@ -62,6 +77,7 @@
 		let latest = '';
 
 		const query = () => {
+			console.log( 'called' );
 			// separate command and keyword
 			const kw = this.opts.keyword.trim();
 			const parts = kw.split( ' ' );
@@ -78,6 +94,7 @@
 				this.items = [];
 				this.pluginRenderArea.innerHTML = '';
 				this.update();
+				ipcRenderer.send( 'resize-height', 84 );
 			}
 
 			Handy.applyPlugin( name, ...args )

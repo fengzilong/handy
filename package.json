@@ -27,6 +27,7 @@
     "electron"
   ],
   "dependencies": {
+    "auto-launch": "^2.1.0",
     "electron-debug": "^1.0.0",
     "jquery": "^3.0.0",
     "riot": "^2.4.1",

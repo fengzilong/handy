@@ -24,9 +24,13 @@ const getPluginByName = name => {
 	return plugins[ name ];
 };
 
+const getAllPlugins = () => {
+	return plugins;
+};
+
 const applyPlugin = ( name, ...args ) => {
 	if( !isPluginRegistered( name ) ) {
-		return Promise.reject();
+		return Promise.resolve( [] );
 	}
 
 	let applied = getPluginByName( name ).apply( ...args );
@@ -39,7 +43,7 @@ const applyPlugin = ( name, ...args ) => {
 
 const applyPluginEnter = ( name, ...args ) => {
 	if( !isPluginRegistered( name ) ) {
-		return;
+		return Promise.resolve( [] );
 	}
 
 	let enterApplied = getPluginByName( name ).enter( ...args );
@@ -65,6 +69,7 @@ const Handy = {
 	getPluginByName,
 	isPluginRegistered,
 	registerPlugin,
+	getAllPlugins,
 	applyPlugin,
 	applyPluginEnter,
 	loading,

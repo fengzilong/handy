@@ -1,4 +1,4 @@
-riot.tag2('app', '<ui-input on-change="{onChange}"></ui-input> <ui-autocomplete keyword="{kw}"></ui-autocomplete>', '', '', function(opts) {
+riot.tag2('app', '<ui-input on-change="{onChange}"></ui-input> <ui-autocomplete keyword="{kw}"></ui-autocomplete>', 'app,[riot-tag="app"],[data-is="app"]{ box-sizing: border-box; } app *,[riot-tag="app"] *,[data-is="app"] *{ box-sizing: inherit; }', '', function(opts) {
 		this.kw = '';
 		this.onChange = v => {
 			this.update({
@@ -7,7 +7,9 @@ riot.tag2('app', '<ui-input on-change="{onChange}"></ui-input> <ui-autocomplete 
 		}
 });
 
-riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}"></div> <div if="{!usePluginRender}" each="{item in items}">{item}</div>', 'ui-autocomplete,[riot-tag="ui-autocomplete"],[data-is="ui-autocomplete"]{ display: block; position: absolute; width: 100%; height: 320px; overflow-y: scroll; }', '', function(opts) {
+riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}"></div> <div name="renderArea" if="{!usePluginRender}" each="{item in items}">{item}</div>', 'ui-autocomplete,[riot-tag="ui-autocomplete"],[data-is="ui-autocomplete"]{ display: block; position: absolute; width: 100%; height: 320px; overflow-y: scroll; }', '', function(opts) {
+		const { ipcRenderer } = require('electron');
+
 		this.usePluginRender = false;
 
 		Handy.on( 'plugin-render', ( name, v ) => {
@@ -30,12 +32,25 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 				if( typeof plugin.bind === 'function' ) {
 					plugin.bind( this.pluginRenderArea );
 				}
-				return;
+			} else {
+				this.usePluginRender = false;
+				this.items = v;
+				this.update();
 			}
 
-			this.usePluginRender = false;
-			this.items = v;
-			this.update();
+			setTimeout(() => {
+				let area;
+				if( this.usePluginRender ) {
+					area = this.pluginRenderArea;
+				} else {
+					area = this.renderArea;
+				}
+
+				const v = $(area).height();
+				console.log( v );
+
+				ipcRenderer.send( 'resize-height', 84 + v );
+			}, 50);
 		} );
 
 		Handy.on( 'render', v => {
@@ -51,6 +66,7 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 		let latest = '';
 
 		const query = () => {
+			console.log( 'called' );
 
 			const kw = this.opts.keyword.trim();
 			const parts = kw.split( ' ' );
@@ -67,6 +83,7 @@ riot.tag2('ui-autocomplete', '<div name="pluginRenderArea" if="{usePluginRender}
 				this.items = [];
 				this.pluginRenderArea.innerHTML = '';
 				this.update();
+				ipcRenderer.send( 'resize-height', 84 );
 			}
 
 			Handy.applyPlugin( name, ...args )
@@ -117,6 +134,24 @@ riot.tag2('ui-input', '<input autofocus type="text" value="" oninput="{onInput}"
 
 			return true;
 		};
+});
+
+riot.tag2('preference', '<div class="container"> <div class="sidebar"> <ul> <li onclick="{onCommon}"><i class="icon iconfont">&#xe601;</i>Common</li> <li><i class="icon iconfont">&#xe600;</i>Plugins</li> </ul> </div> <div class="content"> <div if="{pane === \'common\'}" class=""> <div class="title"> Always on top </div> <div class="description"> keep main window always on top </div> <input type="checkbox"> <div class="title"> Language </div> <div class="description"> choose your language </div> <select> <option value="en">English</option> <option value="zh">Chinese</option> </select> </div> <div if="{pane === \'plugins\'}" class=""> Plugins </div> </div> </div>', 'preference,[riot-tag="preference"],[data-is="preference"]{ display: flex; font-size: 12px; color: #333; -webkit-user-select: none; user-select: none; } preference .container,[riot-tag="preference"] .container,[data-is="preference"] .container{ display: flex; width: 100%; } preference .sidebar,[riot-tag="preference"] .sidebar,[data-is="preference"] .sidebar{ min-width: 150px; max-width: 220px; height: -webkit-calc(100vh - 24px); background-color: #EEE; } preference ul,[riot-tag="preference"] ul,[data-is="preference"] ul{ margin: 0; padding: 10px 0; list-style: none; } preference li,[riot-tag="preference"] li,[data-is="preference"] li{ padding: 8px 0 8px 20px; cursor: pointer; } preference li:hover,[riot-tag="preference"] li:hover,[data-is="preference"] li:hover{ background-color: #DDD; } preference .icon,[riot-tag="preference"] .icon,[data-is="preference"] .icon{ margin-right: 5px; } preference .content,[riot-tag="preference"] .content,[data-is="preference"] .content{ flex: 1; height: -webkit-calc(100vh - 24px); overflow-y: scroll; box-sizing: border-box; padding: 20px; } preference .description,[riot-tag="preference"] .description,[data-is="preference"] .description{ font-size: 10px; margin: 3px 0 6px; } preference select,[riot-tag="preference"] select,[data-is="preference"] select{ padding: 3px; width: 100%; outline: none; }', '', function(opts) {
+		this.pane = 'common';
+
+		this.onCommon = () => {
+			this.pane = 'common';
+			this.update();
+		};
+
+		this.onPlugins = () => {
+			this.pane = 'plugins';
+			this.update();
+		};
+
+		this.on('mount', () => {
+			console.log( 'mounted' );
+		});
 });
 
 riot.tag2('ui-spinner', '<div class="spinner"> <div class="rect1"></div> <div class="rect2"></div> <div class="rect3"></div> <div class="rect4"></div> <div class="rect5"></div> </div>', '.spinner { height: 16px; text-align: center } .spinner > div { display: inline-block; margin: 0 3px; height: 100%; width: 4px; background-color: rgba(0, 0, 0, .15); -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out; animation: sk-stretchdelay 1.2s infinite ease-in-out } .spinner .rect2 { -webkit-animation-delay: -1.1s; animation-delay: -1.1s } .spinner .rect3 { -webkit-animation-delay: -1s; animation-delay: -1s } .spinner .rect4 { -webkit-animation-delay: -.9s; animation-delay: -.9s } .spinner .rect5 { -webkit-animation-delay: -.8s; animation-delay: -.8s } @-webkit-keyframes sk-stretchdelay { 0%, 40%, to { -webkit-transform: scaleY(.4); transform: scaleY(.4) } 20% { -webkit-transform: scaleY(1); transform: scaleY(1) } } @keyframes sk-stretchdelay { 0%, 40%, to { -webkit-transform: scaleY(.4); transform: scaleY(.4) } 20% { -webkit-transform: scaleY(1); transform: scaleY(1) } }', '', function(opts) {

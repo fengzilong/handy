@@ -1,16 +1,15 @@
-<!doctype html>
 <html>
 	<head>
-		<meta charset="utf-8">
-		<title>Handy</title>
-		<link rel="stylesheet" href="./vendor/perfect-scrollbar/css/perfect-scrollbar.min.css">
+		<title>Preferences</title>
 		<link rel="stylesheet" href="./index.css">
+		<link rel="stylesheet" href="./fonts/iconfont.css">
+		<link rel="stylesheet" href="./preference.css">
 	</head>
 	<body>
 		<div id="title"></div>
-		<app></app>
 
-		<script type="text/javascript" src="./vendor/perfect-scrollbar/js/perfect-scrollbar.min.js"></script>
+		<preference></preference>
+
 		<script type="text/javascript">
 			const titlebar = require( 'titlebar' );
 			const t = titlebar();
@@ -21,7 +20,7 @@
 
 			const $ = require( 'jquery' );
 			const riot = require( 'riot' );
-			require( './app' );
+			require( './app-preference' );
 		</script>
 	</body>
 </html>
