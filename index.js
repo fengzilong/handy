@@ -1,8 +1,8 @@
 'use strict';
 const electron = require('electron');
 const AutoLaunch = require('auto-launch');
-const app = electron.app;
-const { ipcMain } = electron;
+const Positioner = require('electron-positioner');
+const { globalShortcut, app, ipcMain } = electron;
 
 ipcMain.on('resize-height', ( event, args ) => {
 	mainWindow.setSize( 600, args );
@@ -20,6 +20,17 @@ let mainWindow;
 let preferenceWindow;
 let tray;
 let trayMenu;
+
+function position( browserWindow ) {
+	const electronScreen = require('electron').screen;
+	const screenSize = electronScreen.getDisplayNearestPoint(electronScreen.getCursorScreenPoint()).workArea;
+	const windowSize = browserWindow.getSize();
+
+	let x = Math.floor(screenSize.x + ((screenSize.width / 2) - (windowSize[0] / 2)));
+	let y = parseInt( screenSize.height / 5 );
+
+	browserWindow.setPosition( x, y );
+}
 
 function onClosed() {
 	// dereference the window
@@ -49,15 +60,21 @@ function createMainWindow() {
 		width: 600,
 		height: 84,
 		frame: false,
+		show: false,
+		skipTaskbar: true,
 		// resizable: false,
 		// alwaysOnTop: true,
 		// show: false,
-		center: true,
+		// center: true,
 		titleBarStyle: 'hidden',
 	});
 
 	win.loadURL(`file://${__dirname}/index.html`);
 	win.on('closed', onClosed);
+
+	position( win );
+
+	// const positioner = new Positioner( win );
 
 	return win;
 }
@@ -150,4 +167,25 @@ app.on('ready', () => {
 	mainWindow = createMainWindow();
 	tray = createTray();
 	trayMenu = createTrayMenu();
+
+	const ret = globalShortcut.register('Alt+`', () => {
+		if( mainWindow.isVisible() ) {
+			mainWindow.hide();
+		} else {
+			mainWindow.show();
+			mainWindow.focus();
+		}
+	});
+
+	if( !ret ) {
+		console.log('registration failed');
+	}
+
+	// Check whether a shortcut is registered.
+	console.log(globalShortcut.isRegistered('Alt+`'));
+});
+
+app.on('will-quit', () => {
+	// Unregister all shortcuts.
+	globalShortcut.unregisterAll();
 });

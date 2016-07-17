@@ -44,17 +44,7 @@
 			}
 
 			setTimeout(() => {
-				let area;
-				if( this.usePluginRender ) {
-					area = this.pluginRenderArea;
-				} else {
-					area = this.renderArea;
-				}
-
-				const v = $(area).height();
-				console.log( v );
-
-				ipcRenderer.send( 'resize-height', 84 + v );
+				ipcRenderer.send( 'resize-height', 84 + 320 );
 			}, 50);
 		} );
 
