@@ -3,3 +3,4 @@ node_modules
 /reducers
 /plugins
 /store.js
+/npm-debug.log
